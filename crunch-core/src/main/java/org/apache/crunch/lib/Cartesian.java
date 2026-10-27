@@ -191,6 +191,11 @@ public class Cartesian {
     PTypeFamily ltf = left.getTypeFamily();
     PTypeFamily rtf = right.getTypeFamily();
 
+    if (ltf == null || rtf == null) {
+      throw new IllegalArgumentException(
+          "Cannot determine the PTypeFamily for one of the input collections to cross()");
+    }
+
     PTableType<Pair<Integer, Integer>, U> ptt = ltf.tableOf(ltf.pairs(ltf.ints(), ltf.ints()), left.getPType());
 
     if (ptt == null)

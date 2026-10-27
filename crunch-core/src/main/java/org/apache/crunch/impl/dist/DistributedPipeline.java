@@ -341,22 +341,18 @@ public abstract class DistributedPipeline implements Pipeline {
   public <T> ReadableSource<T> getMaterializeSourceTarget(PCollection<T> pcollection) {
     PCollectionImpl<T> impl = toPCollectionImpl(pcollection);
 
-    // First, check to see if this is a readable input collection.
+    // First, check to see if this is a readable input collection. If the underlying
+    // source isn't directly readable, fall through to the materialization fallbacks
+    // below instead of failing immediately.
     if (impl instanceof BaseInputCollection) {
       BaseInputCollection<T> ic = (BaseInputCollection<T>) impl;
       if (ic.getSource() instanceof ReadableSource) {
         return (ReadableSource) ic.getSource();
-      } else {
-        throw new IllegalArgumentException(
-            "Cannot materialize non-readable input collection: " + ic);
       }
     } else if (impl instanceof BaseInputTable) {
       BaseInputTable it = (BaseInputTable) impl;
       if (it.getSource() instanceof ReadableSource) {
         return (ReadableSource) it.getSource();
-      } else {
-        throw new IllegalArgumentException(
-            "Cannot materialize non-readable input table: " + it);
       }
     }
 

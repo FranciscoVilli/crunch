@@ -36,6 +36,10 @@ public class Shard {
    * @return A rebalanced {@code PCollection<T>} with the same contents as the input
    */
   public static <T> PCollection<T> shard(PCollection<T> pc, int numPartitions) {
+    if (pc.getTypeFamily() == null) {
+      throw new IllegalArgumentException(
+          "Cannot determine the PTypeFamily for the input collection to shard()");
+    }
     return pc.by(new ShardFn<T>(), pc.getTypeFamily().ints())
         .groupByKey(numPartitions)
         .ungroup()
