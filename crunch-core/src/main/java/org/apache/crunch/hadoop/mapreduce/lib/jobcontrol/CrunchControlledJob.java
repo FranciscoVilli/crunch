@@ -328,10 +328,6 @@ public class CrunchControlledJob implements MRJob {
     return this.state;
   }
 
-  /**
-   * Submit this job to mapred. The state becomes RUNNING if submission is
-   * successful, FAILED otherwise.
-   */
   protected synchronized void submit() {
     try {
       this.preHookStartTimeMsec = System.currentTimeMillis();
@@ -341,13 +337,21 @@ public class CrunchControlledJob implements MRJob {
       this.state = State.RUNNING;
       LOG.info("Running job \"{}\"", getJobName());
       LOG.info("Job status available at: {}", job.getTrackingURL());
+    } catch (InterruptedException ie) {
+      // Restablece el estado de interrupción del hilo actual
+      Thread.currentThread().interrupt();
+      handleSubmitFailure(ie);
     } catch (Exception ioe) {
-      this.state = State.FAILED;
-      this.message = StringUtils.stringifyException(ioe);
-      LOG.info("Error occurred starting job \"{}\":", getJobName());
-      LOG.info(getMessage());
+      handleSubmitFailure(ioe);
     }
-  }
+}
+
+private void handleSubmitFailure(Exception e) {
+    this.state = State.FAILED;
+    this.message = StringUtils.stringifyException(e);
+    LOG.info("Error occurred starting job \"{}\":", getJobName());
+    LOG.info(getMessage());
+}
 
   private void logJobProgress() throws IOException, InterruptedException {
     String progress = String.format("map %.0f%% reduce %.0f%%",

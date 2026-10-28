@@ -56,20 +56,50 @@ public class Aggregate {
     return count(collect, PartitionUtils.getRecommendedPartitions(collect));
   }
 
-  /**
-   * Returns a {@code PTable} that contains the unique elements of this collection mapped to a count
-   * of their occurrences.
-   */
-  public static <S> PTable<S, Long> count(PCollection<S> collect, int numPartitions) {
-    PTypeFamily tf = collect.getTypeFamily();
-    return collect.parallelDo("Aggregate.count", new MapFn<S, Pair<S, Long>>() {
-      public Pair<S, Long> map(S input) {
-        return Pair.of(input, 1L);
-      }
-    }, tf.tableOf(collect.getPType(), tf.longs()))
-        .groupByKey(numPartitions)
-        .combineValues(Aggregators.SUM_LONGS());
+ 
+public static <S> PTable<S, Long> count(
+    PCollection<S> collect, int numPartitions) {
+
+  if (collect == null) {
+    throw new IllegalArgumentException(
+        "La colección no puede ser nula.");
   }
+
+  if (numPartitions <= 0) {
+    throw new IllegalArgumentException(
+        "El número de particiones debe ser positivo.");
+  }
+
+  PTypeFamily tf = collect.getTypeFamily();
+
+  if (tf == null) {
+    throw new IllegalStateException(
+        "La colección debe proporcionar una familia de tipos válida.");
+  }
+
+  PType<S> elementType = collect.getPType();
+
+  if (elementType == null) {
+    throw new IllegalStateException(
+        "La colección debe proporcionar un tipo de elemento válido.");
+  }
+
+  PType<Long> longType = tf.longs();
+
+  if (longType == null) {
+    throw new IllegalStateException(
+        "La familia de tipos debe proporcionar un tipo Long válido.");
+  }
+
+  return collect.parallelDo("Recuento.agregado",
+      new MapFn<S, Pair<S, Long>>() {
+        public Pair<S, Long> map(S input) {
+          return Pair.of(input, 1L);
+        }
+      }, tf.tableOf(elementType, longType))
+      .groupByKey(numPartitions)
+      .combineValues(Aggregators.SUM_LONGS());
+}
   
   /**
    * Returns the number of elements in the provided PCollection.

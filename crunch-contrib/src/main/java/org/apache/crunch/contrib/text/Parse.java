@@ -63,35 +63,74 @@ public final class Parse {
     return input.parallelDo(groupName, new ExtractorFn<T>(groupName, extractor), extractor.getPType(ptf));
   }
 
-  /**
-   * Parses the lines of the input {@code PCollection<String>} and returns a {@code PTable<K, V>} using
-   * the given {@code Extractor<Pair<K, V>>}.
-   * 
-   * @param groupName A label to use for tracking errors related to the parsing process
-   * @param input The input {@code PCollection<String>} to convert
-   * @param extractor The {@code Extractor<Pair<K, V>>} that converts each line
-   * @return A {@code PTable<K, V>}
-   */
-  public static <K, V> PTable<K, V> parseTable(String groupName, PCollection<String> input,
-      Extractor<Pair<K, V>> extractor) {
-    return parseTable(groupName, input, input.getTypeFamily(), extractor);
-  }
   
   /**
-   * Parses the lines of the input {@code PCollection<String>} and returns a {@code PTable<K, V>} using
-   * the given {@code Extractor<Pair<K, V>>} that uses the given {@code PTypeFamily}.
-   * 
-   * @param groupName A label to use for tracking errors related to the parsing process
-   * @param input The input {@code PCollection<String>} to convert
-   * @param ptf The {@code PTypeFamily} of the returned {@code PTable<K, V>}
-   * @param extractor The {@code Extractor<Pair<K, V>>} that converts each line
-   * @return A {@code PTable<K, V>}
+   * Parses the lines of the input PCollection<String> and returns
+   * a PTable<K, V> using the given Extractor<Pair<K, V>>.
    */
-  public static <K, V> PTable<K, V> parseTable(String groupName, PCollection<String> input,
-      PTypeFamily ptf, Extractor<Pair<K, V>> extractor) {
-    List<PType> st = extractor.getPType(ptf).getSubTypes();
-    PTableType<K, V> ptt = ptf.tableOf((PType<K>) st.get(0), (PType<V>) st.get(1));
-    return input.parallelDo(groupName, new ExtractorFn<Pair<K, V>>(groupName, extractor), ptt);
+  public static <K, V> PTable<K, V> parseTable(
+      String groupName,
+      PCollection<String> input,
+      Extractor<Pair<K, V>> extractor) {
+
+    if (input == null) {
+      throw new IllegalArgumentException("input cannot be null");
+    }
+
+    if (extractor == null) {
+      throw new IllegalArgumentException("extractor cannot be null");
+    }
+
+    return parseTable(
+        groupName, input, input.getTypeFamily(), extractor);
+  }
+
+  /*
+   * Analiza las líneas del PCollection<String> de entrada y devuelve
+   * un PTable<K, V> utilizando la PTypeFamily proporcionada. 
+   */
+  public static <K, V> PTable<K, V> parseTable(
+      String groupName,
+      PCollection<String> input,
+      PTypeFamily ptf,
+      Extractor<Pair<K, V>> extractor) {
+
+    if (input == null) {
+      throw new IllegalArgumentException("La entrada no puede ser nula");
+    }
+
+    if (ptf == null) {
+      throw new IllegalArgumentException("La ptf no puede ser nula");
+    }
+
+    if (extractor == null) {
+      throw new IllegalArgumentException("El extractor no puede ser nulo");
+    }
+
+    PType<Pair<K, V>> pairType = extractor.getPType(ptf);
+
+    if (pairType == null) {
+      throw new IllegalArgumentException(
+          "El extractor debe proporcionar un PType válido.");
+    }
+
+    List<PType> subTypes = pairType.getSubTypes();
+
+    if (subTypes == null || subTypes.size() < 2
+        || subTypes.get(0) == null || subTypes.get(1) == null) {
+      throw new IllegalArgumentException(
+          "El PType debe contener dos subtipos válidos.");
+    }
+
+    PTableType<K, V> ptt =
+        ptf.tableOf(
+            (PType<K>) subTypes.get(0),
+            (PType<V>) subTypes.get(1));
+
+    return input.parallelDo(
+        groupName,
+        new ExtractorFn<Pair<K, V>>(groupName, extractor),
+        ptt);
   }
   
   private static class ExtractorFn<T> extends MapFn<String, T> {

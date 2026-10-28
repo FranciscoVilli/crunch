@@ -415,13 +415,14 @@ public class Avros {
   }
 
   public static final <T> AvroType<Collection<T>> collections(PType<T> ptype) {
+    Preconditions.checkNotNull(ptype, "ptype cannot be null");
     AvroType<T> avroType = (AvroType<T>) ptype;
     Schema collectionSchema = Schema.createArray(allowNulls(avroType.getSchema()));
     GenericDataArrayToCollection<T> input = new GenericDataArrayToCollection<T>(avroType.getInputMapFn());
     CollectionToGenericDataArray output = new CollectionToGenericDataArray(collectionSchema, avroType.getOutputMapFn());
     return new AvroType(Collection.class, collectionSchema, input, output, new CollectionDeepCopier<T>(ptype),
         avroType.getRecordType(), ptype);
-  }
+}
 
   private static class AvroMapToMap<T> extends MapFn<Map<CharSequence, Object>, Map<String, T>> {
     private final MapFn<Object, T> mapFn;
