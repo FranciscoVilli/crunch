@@ -59,6 +59,8 @@ public class Cogroup {
       int numReducers,
       PTable<K, U> left,
       PTable<K, V> right) {
+    validateTables(left, right);
+    validateNumReducers(numReducers);
     PTypeFamily tf = left.getTypeFamily();
     return cogroup(
         tf.pairs(tf.collections(left.getValueType()),
@@ -98,6 +100,8 @@ public class Cogroup {
       PTable<K, V1> first,
       PTable<K, V2> second,
       PTable<K, V3> third) {
+    validateTables(first, second, third);
+    validateNumReducers(numReducers);
     return cogroup(
         Tuple3.Collect.derived(first.getValueType(), second.getValueType(), third.getValueType()),
         new TupleFactory<Tuple3.Collect<V1, V2, V3>>() {
@@ -145,6 +149,8 @@ public class Cogroup {
       PTable<K, V2> second,
       PTable<K, V3> third,
       PTable<K, V4> fourth) {
+    validateTables(first, second, third, fourth);
+    validateNumReducers(numReducers);
     return cogroup(
         Tuple4.Collect.derived(first.getValueType(), second.getValueType(), third.getValueType(),
             fourth.getValueType()),
@@ -187,6 +193,8 @@ public class Cogroup {
       int numReducers,
       PTable<K, ?> first,
       PTable<K, ?>... rest) {
+    validateTables(first, rest);
+    validateNumReducers(numReducers);
     PTypeFamily tf = first.getTypeFamily();
     PType[] components = new PType[1 + rest.length];
     components[0] = tf.collections(first.getValueType());
@@ -205,6 +213,8 @@ public class Cogroup {
       TupleFactory tupleFactory,
       int numReducers,
       PTable<K, ?> first, PTable<K, ?>... rest) {
+    validateTables(first, rest);
+    validateNumReducers(numReducers);
     PTypeFamily ptf = first.getTypeFamily();
     PType[] ptypes = new PType[1 + rest.length];
     ptypes[0] = first.getValueType();
@@ -232,6 +242,23 @@ public class Cogroup {
     return grouped.mapValues("cogroup", 
         new PostGroupFn<T>(tupleFactory, ptypes),
         outputType);
+  }
+
+  private static void validateTables(PTable<?, ?> first, PTable<?, ?>... rest) {
+    if (first == null) {
+      throw new IllegalArgumentException("La primera PTable no debe ser nula");
+    }
+    for (int i = 0; i < rest.length; i++) {
+      if (rest[i] == null) {
+        throw new IllegalArgumentException("Indice de la tabla incial " + (i + 1) + " no debe ser nula");
+      }
+    }
+  }
+
+  private static void validateNumReducers(int numReducers) {
+    if (numReducers < 0) {
+      throw new IllegalArgumentException("El número de reductores no debe ser negativo.");
+    }
   }
   
   private static class CogroupFn<T> extends MapFn<T, Union> {
