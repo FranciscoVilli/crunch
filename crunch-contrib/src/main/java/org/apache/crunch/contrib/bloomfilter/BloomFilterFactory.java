@@ -62,6 +62,9 @@ public class BloomFilterFactory {
         filterTable = currentTable;
       }
     }
+    if (filterTable == null) {
+      throw new IOException("No existen docymentos en esa ruta : " + inputPath);
+    }
     return filterTable.asMap();
   }
 
