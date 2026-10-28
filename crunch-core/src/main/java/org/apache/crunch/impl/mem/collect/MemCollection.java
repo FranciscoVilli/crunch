@@ -70,7 +70,7 @@ public class MemCollection<S> implements PCollection<S> {
 
   private final Iterable<S> collect;
   private final PType<S> ptype;
-  private String name;
+  private final String name;
 
   public MemCollection(Iterable<S> collect) {
     this(collect, null, null);
@@ -317,12 +317,19 @@ public class MemCollection<S> implements PCollection<S> {
 
   @Override
   public <K> PTable<K, S> by(MapFn<S, K> mapFn, PType<K> keyType) {
-    return parallelDo(new ExtractKeyFn<K, S>(mapFn), getTypeFamily().tableOf(keyType, getPType()));
+    return parallelDo(new ExtractKeyFn<K, S>(mapFn), requireTypeFamily().tableOf(keyType, getPType()));
   }
 
   @Override
   public <K> PTable<K, S> by(String name, MapFn<S, K> mapFn, PType<K> keyType) {
-    return parallelDo(name, new ExtractKeyFn<K, S>(mapFn), getTypeFamily().tableOf(keyType, getPType()));
+    return parallelDo(name, new ExtractKeyFn<K, S>(mapFn), requireTypeFamily().tableOf(keyType, getPType()));
+  }
+
+  private PTypeFamily requireTypeFamily() {
+    if (ptype == null) {
+      throw new IllegalStateException("No se puede crear una tabla sin un tipo de familia definido");
+    }
+    return ptype.getFamily();
   }
 
   /**

@@ -26,7 +26,6 @@ import java.util.Iterator;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.apache.crunch.MapFn;
 import org.apache.crunch.PTable;
@@ -112,7 +111,7 @@ public class MapredTest implements Serializable {
     }, Writables.tableOf(Writables.writables(IntWritable.class), Writables.writables(Text.class)));
     
     PTable<Text, LongWritable> out = Mapred.map(two, TestMapper.class, Text.class, LongWritable.class);
-    assertEquals(ImmutableList.of($("foot", 4), $("ball", 4), $("bazzar", 6)),
+    assertEquals(Lists.newArrayList($("foot", 4), $("ball", 4), $("bazzar", 6)),
         Lists.newArrayList(out.materialize()));
   }
   
@@ -127,7 +126,7 @@ public class MapredTest implements Serializable {
       }
     }, Writables.tableOf(Writables.writables(IntWritable.class), Writables.writables(Text.class)));
     PTable<Text, LongWritable> out = Mapred.reduce(two.groupByKey(), TestReducer.class, Text.class, LongWritable.class);
-    assertEquals(ImmutableList.of($("foot", 1), $("base", 1), $("basket", 1), $("hockey", 0)),
+    assertEquals(Lists.newArrayList($("foot", 1), $("base", 1), $("basket", 1), $("hockey", 0)),
         Lists.newArrayList(out.materialize()));
     assertEquals(3, MemPipeline.getCounters().findCounter("foo", "bar").getValue());
   }
