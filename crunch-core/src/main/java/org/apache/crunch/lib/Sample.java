@@ -113,10 +113,14 @@ public class Sample {
 
    */
   public static <T> PCollection<T> reservoirSample(
-      PCollection<T> input,
-      int sampleSize,
-      Long seed) {
+    PCollection<T> input,
+    int sampleSize,
+    Long seed) {
     PTypeFamily ptf = input.getTypeFamily();
+    if (ptf == null) {
+      throw new IllegalArgumentException(
+          "No se pudo determinar la PTypeFamily de la colección de entrada");
+    }
     PType<Pair<T, Integer>> ptype = ptf.pairs(input.getPType(), ptf.ints());
     return weightedReservoirSample(
         input.parallelDo("Map to pairs for reservoir sampling", new MapFn<T, Pair<T, Integer>>() {

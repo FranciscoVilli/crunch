@@ -81,6 +81,10 @@ class CrunchInputSplit extends InputSplit implements Writable, Configurable, Sup
   }
 
   public Class<? extends InputFormat<?, ?>> getInputFormatClass() {
+    if (bundle == null) {
+      throw new IllegalStateException(
+          "El 'bundle' no está inicializado; no se puede obtener la clase del InputFormat");
+    }
     return bundle.getFormatClass();
   }
 

@@ -112,7 +112,7 @@ public class MapredTest implements Serializable {
     
     PTable<Text, LongWritable> out = Mapred.map(two, TestMapper.class, Text.class, LongWritable.class);
     assertEquals(Lists.newArrayList($("foot", 4), $("ball", 4), $("bazzar", 6)),
-        Lists.newArrayList(out.materialize()));
+      Lists.newArrayList(out.materialize()));
   }
   
   @Test

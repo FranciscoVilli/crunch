@@ -55,7 +55,12 @@ public abstract class BloomFilterFn<S> extends DoFn<S, Pair<String, BloomFilter>
 
   @Override
   public void cleanup(Emitter<Pair<String, BloomFilter>> emitter) {
-    String filterName = getConfiguration().get(CRUNCH_FILTER_NAME);
+    Configuration conf = getConfiguration();
+    if (conf == null) {
+      throw new IllegalStateException(
+          "No se pudo obtener la Configuration: ni 'conf' ni 'context' están inicializados");
+    }
+    String filterName = conf.get(CRUNCH_FILTER_NAME);
     emitter.emit(Pair.of(filterName, bloomFilter));
   }
 
